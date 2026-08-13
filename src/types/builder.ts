@@ -76,6 +76,7 @@ export interface CanvasNode {
   styles: NodeStyles;
   content?: string; // Text content, button label, etc.
   src?: string; // Image URL
+  alt?: string; // Image alt text
   href?: string; // Link href
   placeholder?: string; // Input placeholder
   iconName?: string; // Icon identifier
@@ -89,6 +90,14 @@ export interface CanvasNode {
   mobileMenuBtnStyle?: 'rounded' | 'circle' | 'square' | 'ghost';
   mobileMenuBtnIcon?: 'hamburger' | 'dots' | 'grid';
   mobileHoverEffect?: 'subtle' | 'indigo' | 'emerald' | 'pill' | 'lift';
+
+  // FAQ Accordion Toggle Customization
+  faqCollapsedIcon?: string;  // Icon name when collapsed (e.g., 'Plus', 'ChevronDown', 'ArrowDown')
+  faqExpandedIcon?: string;   // Icon name when expanded (e.g., 'Minus', 'ChevronUp', 'X')
+  faqToggleBg?: string;       // Background color when collapsed (Tailwind class)
+  faqToggleActiveBg?: string; // Background color when expanded (Tailwind class)
+  faqToggleRadius?: string;   // Border radius (Tailwind class)
+  faqToggleSize?: string;     // Size: 'sm' | 'md' | 'lg'
 }
 
 export type ViewportMode = 'desktop' | 'tablet' | 'mobile' | 'split' | 'preview';

@@ -1,3 +1,19 @@
+/**
+ * TreeView.tsx
+ * ─────────────────────────────────────────────────────────────
+ * The DOM hierarchy tree panel shown in the Left Sidebar → "Layers" tab.
+ *
+ * Renders the CanvasNode tree as a collapsible indented list where:
+ *   • Each row represents one CanvasNode (shown as icon + name)
+ *   • Click a row  → select that node (highlights it on the canvas)
+ *   • Hover a row  → soft highlight on canvas
+ *   • Eye icon     → toggle visibility (hides element from canvas without deleting)
+ *   • Drag a row   → reorder within tree via drag-and-drop
+ *
+ * The tree re-renders reactively whenever rootNode changes in the store.
+ * ─────────────────────────────────────────────────────────────
+ */
+
 import React, { useState } from 'react';
 import {
   ChevronRight,
@@ -58,8 +74,10 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({ node, depth }) => {
   const [expanded, setExpanded] = useState<boolean>(true);
   const {
     selectedNodeId,
+    selectedNodeIds,
     hoveredNodeId,
     setSelectedNodeId,
+    toggleNodeSelection,
     setHoveredNodeId,
     deleteNode,
     duplicateNode,
@@ -70,6 +88,7 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({ node, depth }) => {
   const isLight = useBuilderStore((s) => s.studioTheme) === 'light';
 
   const isSelected = selectedNodeId === node.id;
+  const isMultiSelected = selectedNodeIds.includes(node.id) && selectedNodeIds.length > 1;
   const isHovered = hoveredNodeId === node.id;
   const hasChildren = node.children && node.children.length > 0;
   const IconComp = getNodeIcon(node.type);
@@ -79,7 +98,11 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({ node, depth }) => {
       <div
         onClick={(e) => {
           e.stopPropagation();
-          setSelectedNodeId(node.id);
+          if (e.ctrlKey || e.metaKey) {
+            toggleNodeSelection(node.id);
+          } else {
+            setSelectedNodeId(node.id);
+          }
         }}
         onMouseEnter={() => setHoveredNodeId(node.id)}
         onMouseLeave={() => setHoveredNodeId(null)}
@@ -105,6 +128,8 @@ const TreeNodeItem: React.FC<TreeNodeItemProps> = ({ node, depth }) => {
         className={`group flex items-center justify-between py-1.5 pr-2 rounded-lg text-xs font-medium transition-colors cursor-pointer my-0.5 ${
           isSelected
             ? 'bg-indigo-600 text-white shadow-sm font-semibold'
+            : isMultiSelected
+            ? 'bg-violet-600/80 text-white font-semibold'
             : isHovered
             ? isLight
               ? 'bg-slate-100 text-slate-900'

@@ -2,10 +2,18 @@ import { create } from 'zustand';
 import type { CanvasNode, NodeStyles, ViewportMode, ComponentType } from '../types/builder';
 import { INITIAL_CANVAS_NODE, generateId, PRESET_TEMPLATES } from '../data/componentLibrary';
 
+export interface ToastNotification {
+  id: string;
+  message: string;
+  type: 'success' | 'error' | 'info' | 'warning';
+}
+
 interface BuilderState {
   // Tree state
   rootNode: CanvasNode;
+  currentTemplateId: string | null;
   selectedNodeId: string | null;
+  selectedNodeIds: string[];
   hoveredNodeId: string | null;
 
   // Viewport & UI State
@@ -14,6 +22,8 @@ interface BuilderState {
   activeTabLeft: 'tree' | 'library' | 'templates';
   activeTabRight: 'styles' | 'content' | 'classes';
   codeExportModalOpen: boolean;
+  isProjectsModalOpen: boolean;
+  isAuthModalOpen: boolean;
   codeFormat: 'tsx' | 'jsx' | 'html';
   studioTheme: 'light' | 'dark';
   mobilePanel: 'canvas' | 'left' | 'right';
@@ -21,6 +31,11 @@ interface BuilderState {
   isRightSidebarOpen: boolean;
   simulatedHoverNodeId: string | null;
   boxInspectorEnabled: boolean;
+
+  // Toasts
+  toasts: ToastNotification[];
+  addToast: (message: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
+  removeToast: (id: string) => void;
 
   // History Stack (Undo / Redo)
   history: {
@@ -32,6 +47,8 @@ interface BuilderState {
 
   // Actions
   setSelectedNodeId: (id: string | null) => void;
+  toggleNodeSelection: (id: string) => void;
+  clearMultiSelection: () => void;
   setHoveredNodeId: (id: string | null) => void;
   setSimulatedHoverNodeId: (id: string | null) => void;
   setBoxInspectorEnabled: (enabled: boolean) => void;
@@ -41,6 +58,8 @@ interface BuilderState {
   setActiveTabLeft: (tab: 'tree' | 'library' | 'templates') => void;
   setActiveTabRight: (tab: 'styles' | 'content' | 'classes') => void;
   setCodeExportModalOpen: (open: boolean) => void;
+  setProjectsModalOpen: (open: boolean) => void;
+  setAuthModalOpen: (open: boolean) => void;
   setCodeFormat: (format: 'tsx' | 'jsx' | 'html') => void;
   setMobilePanel: (panel: 'canvas' | 'left' | 'right') => void;
   setStudioTheme: (theme: 'light' | 'dark') => void;
@@ -57,13 +76,14 @@ interface BuilderState {
 
   // Node Mutations
   updateNodeStyles: (id: string, styles: Partial<NodeStyles>) => void;
+  updateMultipleNodesStyles: (ids: string[], styles: Partial<NodeStyles>) => void;
   updateNodeProps: (id: string, props: Partial<CanvasNode>) => void;
   applyFullThemePreset: (id: string, themeKey: 'indigo' | 'darkLuxe' | 'clean' | 'mint' | 'rose' | 'glass') => void;
   applyGlobalThemePreset: (themeKey: 'indigo' | 'darkLuxe' | 'clean' | 'mint' | 'rose' | 'glass') => void;
   addNode: (parentId: string, newNode: CanvasNode, targetIndex?: number) => void;
   deleteNode: (id: string) => void;
   duplicateNode: (id: string) => void;
-  moveNode: (activeId: string, targetId: string, position: 'before' | 'after' | 'inside') => void;
+  moveNode: (activeId: string, targetId: string, position?: 'before' | 'after' | 'inside', targetIndex?: number) => void;
   moveNodeOrder: (id: string, direction: 'up' | 'down') => void;
   toggleNodeVisibility: (id: string) => void;
   selectParentNode: (childId: string) => void;
@@ -178,7 +198,8 @@ const moveNodeInTreeHelper = (
   root: CanvasNode,
   activeId: string,
   targetId: string,
-  position: 'before' | 'after' | 'inside'
+  position: 'before' | 'after' | 'inside' = 'after',
+  targetIndex?: number
 ): CanvasNode => {
   if (activeId === targetId || activeId === root.id) return root;
 
@@ -186,8 +207,21 @@ const moveNodeInTreeHelper = (
   const nodeToMove = findNode(root, activeId);
   if (!nodeToMove) return root;
 
+  const oldParent = findParent(root, activeId);
+
   // Remove from old position
   const treeWithoutActive = removeNodeFromTree(root, activeId);
+
+  if (targetIndex !== undefined) {
+    let adjustedIndex = targetIndex;
+    if (oldParent && oldParent.id === targetId && targetIndex > 0) {
+      const oldIdx = oldParent.children?.findIndex((c) => c.id === activeId) ?? -1;
+      if (oldIdx !== -1 && oldIdx < targetIndex) {
+        adjustedIndex = targetIndex - 1;
+      }
+    }
+    return insertNodeInTree(treeWithoutActive, targetId, nodeToMove, adjustedIndex);
+  }
 
   if (position === 'inside') {
     // Insert as child of target container
@@ -429,9 +463,37 @@ const recursiveThemeCascade = (
   };
 };
 
+import { supabase } from '../lib/supabase';
+
+let cloudAutosaveTimer: any = null;
+
+export const autoSaveToSupabaseCloud = (templateId: string | null, node: CanvasNode) => {
+  if (!templateId || !node) return;
+  if (cloudAutosaveTimer) clearTimeout(cloudAutosaveTimer);
+  cloudAutosaveTimer = setTimeout(async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      await supabase.from('projects').upsert({
+        id: `tmpl_${user.id}_${templateId}`,
+        user_id: user.id,
+        name: templateId,
+        data: node,
+        updated_at: new Date().toISOString(),
+      });
+    } catch (err) {
+      console.error('Supabase cloud autosave error:', err);
+    }
+  }, 1000);
+};
+
+const initialTemplate = PRESET_TEMPLATES.find((t) => t.id === 'portfolio') || PRESET_TEMPLATES[0];
+
 export const useBuilderStore = create<BuilderState>((set, get) => ({
-  rootNode: INITIAL_CANVAS_NODE,
-  selectedNodeId: 'root_container',
+  rootNode: initialTemplate ? initialTemplate.node : INITIAL_CANVAS_NODE,
+  currentTemplateId: 'portfolio',
+  selectedNodeId: (initialTemplate ? initialTemplate.node : INITIAL_CANVAS_NODE).id,
+  selectedNodeIds: [(initialTemplate ? initialTemplate.node : INITIAL_CANVAS_NODE).id],
   hoveredNodeId: null,
 
   viewMode: 'desktop',
@@ -439,6 +501,8 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   activeTabLeft: 'library',
   activeTabRight: 'styles',
   codeExportModalOpen: false,
+  isProjectsModalOpen: false,
+  isAuthModalOpen: false,
   codeFormat: 'tsx',
   studioTheme: 'light',
   mobilePanel: 'canvas',
@@ -446,6 +510,22 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   isRightSidebarOpen: true,
   simulatedHoverNodeId: null,
   boxInspectorEnabled: false,
+
+  toasts: [],
+  addToast: (message, type = 'info') => {
+    const id = `toast_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    set((state) => ({
+      toasts: [...state.toasts, { id, message, type }],
+    }));
+    setTimeout(() => {
+      get().removeToast(id);
+    }, 4000);
+  },
+  removeToast: (id) => {
+    set((state) => ({
+      toasts: state.toasts.filter((t) => t.id !== id),
+    }));
+  },
 
   history: {
     past: [],
@@ -465,17 +545,24 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   },
 
   pasteStyles: (id) => {
-    const { rootNode, selectedNodeId, copiedStyles, history } = get();
+    const { rootNode, selectedNodeId, selectedNodeIds, copiedStyles, history } = get();
     const targetId = id || selectedNodeId;
     if (!targetId || !copiedStyles) return;
 
-    const updatedRoot = updateNodeInTree(rootNode, targetId, (node) => ({
-      ...node,
-      styles: {
-        ...node.styles,
-        ...copiedStyles,
-      },
-    }));
+    const targets = selectedNodeIds.length > 1 && selectedNodeIds.includes(targetId)
+      ? selectedNodeIds
+      : [targetId];
+
+    let updatedRoot = rootNode;
+    targets.forEach((tId) => {
+      updatedRoot = updateNodeInTree(updatedRoot, tId, (node) => ({
+        ...node,
+        styles: {
+          ...node.styles,
+          ...copiedStyles,
+        },
+      }));
+    });
 
     set({
       rootNode: updatedRoot,
@@ -499,8 +586,30 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     if (node && ['image', 'heading', 'text', 'link', 'button', 'badge', 'input'].includes(node.type)) {
       nextTabRight = 'content';
     }
-    set({ selectedNodeId: id, activeTabRight: nextTabRight });
+    set({
+      selectedNodeId: id,
+      selectedNodeIds: id ? [id] : [],
+      activeTabRight: nextTabRight,
+    });
   },
+
+  toggleNodeSelection: (id) => {
+    const { selectedNodeIds } = get();
+    if (selectedNodeIds.includes(id)) {
+      if (selectedNodeIds.length === 1) return;
+      const next = selectedNodeIds.filter((i) => i !== id);
+      set({ selectedNodeIds: next, selectedNodeId: next[next.length - 1] });
+    } else {
+      set({ selectedNodeIds: [...selectedNodeIds, id], selectedNodeId: id });
+    }
+  },
+
+  clearMultiSelection: () => {
+    const { selectedNodeId, rootNode } = get();
+    const anchor = selectedNodeId || rootNode.id;
+    set({ selectedNodeIds: [anchor], selectedNodeId: anchor });
+  },
+
   setHoveredNodeId: (id) => set({ hoveredNodeId: id }),
   setSimulatedHoverNodeId: (id) => set({ simulatedHoverNodeId: id }),
   setBoxInspectorEnabled: (enabled) => set({ boxInspectorEnabled: enabled }),
@@ -513,6 +622,8 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   setActiveTabLeft: (tab) => set({ activeTabLeft: tab }),
   setActiveTabRight: (tab) => set({ activeTabRight: tab }),
   setCodeExportModalOpen: (open) => set({ codeExportModalOpen: open }),
+  setProjectsModalOpen: (open) => set({ isProjectsModalOpen: open }),
+  setAuthModalOpen: (open) => set({ isAuthModalOpen: open }),
   setCodeFormat: (format) => set({ codeFormat: format }),
   setMobilePanel: (panel) => set({ mobilePanel: panel }),
   setStudioTheme: (theme) => set({ studioTheme: theme }),
@@ -523,7 +634,7 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   setRightSidebarOpen: (open) => set({ isRightSidebarOpen: open }),
 
   updateNodeStyles: (id, newStyles) => {
-    const { rootNode, history } = get();
+    const { rootNode, currentTemplateId, history } = get();
     const updatedRoot = updateNodeInTree(rootNode, id, (node) => ({
       ...node,
       styles: {
@@ -531,6 +642,33 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
         ...newStyles,
       },
     }));
+
+    autoSaveToSupabaseCloud(currentTemplateId, updatedRoot);
+
+    set({
+      rootNode: updatedRoot,
+      history: {
+        past: [...history.past.slice(-30), rootNode],
+        future: [],
+      },
+    });
+  },
+
+  updateMultipleNodesStyles: (ids, newStyles) => {
+    const { rootNode, currentTemplateId, history } = get();
+    let updatedRoot = rootNode;
+
+    ids.forEach((id) => {
+      updatedRoot = updateNodeInTree(updatedRoot, id, (node) => ({
+        ...node,
+        styles: {
+          ...node.styles,
+          ...newStyles,
+        },
+      }));
+    });
+
+    autoSaveToSupabaseCloud(currentTemplateId, updatedRoot);
 
     set({
       rootNode: updatedRoot,
@@ -542,11 +680,13 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   },
 
   updateNodeProps: (id, newProps) => {
-    const { rootNode, history } = get();
+    const { rootNode, currentTemplateId, history } = get();
     const updatedRoot = updateNodeInTree(rootNode, id, (node) => ({
       ...node,
       ...newProps,
     }));
+
+    autoSaveToSupabaseCloud(currentTemplateId, updatedRoot);
 
     set({
       rootNode: updatedRoot,
@@ -558,10 +698,22 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   },
 
   applyFullThemePreset: (id, themeKey) => {
-    const { rootNode, history } = get();
-    const updatedRoot = updateNodeInTree(rootNode, id, (targetNode) =>
-      recursiveThemeCascade(targetNode, themeKey, true)
-    );
+    const { rootNode, currentTemplateId, selectedNodeId, selectedNodeIds, history } = get();
+    const targetId = id || selectedNodeId;
+    if (!targetId) return;
+
+    const targets = selectedNodeIds.length > 1 && selectedNodeIds.includes(targetId)
+      ? selectedNodeIds
+      : [targetId];
+
+    let updatedRoot = rootNode;
+    targets.forEach((tId) => {
+      updatedRoot = updateNodeInTree(updatedRoot, tId, (targetNode) =>
+        recursiveThemeCascade(targetNode, themeKey, true)
+      );
+    });
+
+    autoSaveToSupabaseCloud(currentTemplateId, updatedRoot);
 
     set({
       rootNode: updatedRoot,
@@ -573,8 +725,10 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   },
 
   applyGlobalThemePreset: (themeKey) => {
-    const { rootNode, history } = get();
+    const { rootNode, currentTemplateId, history } = get();
     const updatedRoot = recursiveThemeCascade(rootNode, themeKey, true);
+
+    autoSaveToSupabaseCloud(currentTemplateId, updatedRoot);
 
     set({
       rootNode: updatedRoot,
@@ -586,13 +740,15 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   },
 
   addNode: (parentId, newNode, targetIndex) => {
-    const { rootNode, history } = get();
+    const { rootNode, currentTemplateId, history } = get();
 
     // Verify parent exists or default to root
     const parentNode = findNode(rootNode, parentId);
     const validParentId = parentNode && parentNode.isContainer ? parentId : rootNode.id;
 
     const updatedRoot = insertNodeInTree(rootNode, validParentId, newNode, targetIndex);
+
+    autoSaveToSupabaseCloud(currentTemplateId, updatedRoot);
 
     set({
       rootNode: updatedRoot,
@@ -605,11 +761,13 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   },
 
   deleteNode: (id) => {
-    const { rootNode, selectedNodeId, history } = get();
+    const { rootNode, currentTemplateId, selectedNodeId, history } = get();
     if (id === rootNode.id) return; // Cannot delete root
 
     const updatedRoot = removeNodeFromTree(rootNode, id);
     const nextSelected = selectedNodeId === id ? rootNode.id : selectedNodeId;
+
+    autoSaveToSupabaseCloud(currentTemplateId, updatedRoot);
 
     set({
       rootNode: updatedRoot,
@@ -643,9 +801,9 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     });
   },
 
-  moveNode: (activeId, targetId, position) => {
+  moveNode: (activeId, targetId, position, targetIndex) => {
     const { rootNode, history } = get();
-    const updatedRoot = moveNodeInTreeHelper(rootNode, activeId, targetId, position);
+    const updatedRoot = moveNodeInTreeHelper(rootNode, activeId, targetId, position, targetIndex);
 
     set({
       rootNode: updatedRoot,
@@ -709,14 +867,56 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     }
   },
 
-  loadTemplate: (templateId) => {
-    const { rootNode, history } = get();
+  loadTemplate: async (templateId) => {
+    const { rootNode, currentTemplateId, history } = get();
+
+    // 1. Save current active template state to Supabase Cloud if user is logged in
+    if (currentTemplateId && rootNode) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from('projects').upsert({
+            id: `tmpl_${user.id}_${currentTemplateId}`,
+            user_id: user.id,
+            name: currentTemplateId,
+            data: rootNode,
+            updated_at: new Date().toISOString(),
+          });
+        }
+      } catch (err) {
+        console.error('Cloud save error before template switch:', err);
+      }
+    }
+
     const template = PRESET_TEMPLATES.find((t) => t.id === templateId);
     if (!template) return;
 
+    let targetNode = template.node;
+
+    // 2. Fetch saved state for target template from Supabase Cloud
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data, error } = await supabase
+          .from('projects')
+          .select('data')
+          .eq('user_id', user.id)
+          .eq('name', templateId)
+          .single();
+
+        if (!error && data?.data) {
+          targetNode = data.data;
+        }
+      }
+    } catch (err) {
+      console.error('Cloud fetch error during template load:', err);
+    }
+
     set({
-      rootNode: template.node,
-      selectedNodeId: template.node.id,
+      rootNode: targetNode,
+      currentTemplateId: templateId,
+      selectedNodeId: targetNode.id,
+      selectedNodeIds: [targetNode.id],
       history: {
         past: [...history.past.slice(-30), rootNode],
         future: [],
@@ -724,11 +924,24 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
     });
   },
 
-  resetCanvas: () => {
-    const { rootNode, history } = get();
+  resetCanvas: async () => {
+    const { currentTemplateId, history, rootNode } = get();
+    let template = PRESET_TEMPLATES.find((t) => t.id === currentTemplateId);
+    const nextRoot = template ? template.node : INITIAL_CANVAS_NODE;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && currentTemplateId) {
+        await supabase.from('projects').delete().eq('id', `tmpl_${user.id}_${currentTemplateId}`);
+      }
+    } catch (err) {
+      console.error('Error deleting cloud template draft:', err);
+    }
+
     set({
-      rootNode: INITIAL_CANVAS_NODE,
-      selectedNodeId: INITIAL_CANVAS_NODE.id,
+      rootNode: nextRoot,
+      selectedNodeId: nextRoot.id,
+      selectedNodeIds: [nextRoot.id],
       history: {
         past: [...history.past.slice(-30), rootNode],
         future: [],
@@ -771,6 +984,30 @@ export const useBuilderStore = create<BuilderState>((set, get) => ({
   canUndo: () => get().history.past.length > 0,
   canRedo: () => get().history.future.length > 0,
 }));
+
+// ─── Supabase Cloud Auto-Sync Subscription (No LocalStorage) ──────────────
+let syncDebounceTimer: any = null;
+
+useBuilderStore.subscribe((state) => {
+  if (syncDebounceTimer) clearTimeout(syncDebounceTimer);
+  syncDebounceTimer = setTimeout(async () => {
+    try {
+      const { data } = await supabase.auth.getUser();
+      const userId = data?.user?.id;
+      const draftId = userId ? `live_draft_${userId}` : 'live_draft_anonymous';
+
+      await supabase.from('projects').upsert({
+        id: draftId,
+        user_id: userId || null,
+        name: 'Active Live Canvas',
+        data: state.rootNode,
+        updated_at: new Date().toISOString(),
+      });
+    } catch (e) {
+      console.warn('Supabase cloud auto-sync error:', e);
+    }
+  }, 500);
+});
 
 export const getSelectedNode = (root: CanvasNode, selectedId: string | null): CanvasNode | null => {
   if (!selectedId) return null;

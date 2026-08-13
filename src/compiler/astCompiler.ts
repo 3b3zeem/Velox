@@ -60,7 +60,12 @@ export const getNodeClassNames = (styles: NodeStyles): string => {
   const hasCustomHeight = /\b(h-[^\s]+|min-h-[^\s]+|max-h-[^\s]+)/.test(custom);
   const hasCustomWidth = /\b(w-[^\s]+|min-w-[^\s]+|max-w-[^\s]+)/.test(custom);
 
-  if (styles.width && !hasCustomWidth) classes.push(styles.width);
+  if (styles.width && !hasCustomWidth) {
+    classes.push(styles.width);
+    if (styles.width.includes('w-full') && !custom.includes('self-stretch')) {
+      classes.push('self-stretch');
+    }
+  }
   if (styles.height && !hasCustomHeight) classes.push(styles.height);
   if (styles.objectFit) classes.push(styles.objectFit);
   if (styles.aspectRatio) classes.push(styles.aspectRatio);

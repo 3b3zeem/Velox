@@ -4,7 +4,11 @@ import { LeftSidebar } from './components/sidebar/LeftSidebar';
 import { Canvas } from './components/canvas/Canvas';
 import { RightSidebar } from './components/inspector/RightSidebar';
 import { CodeExportModal } from './components/modals/CodeExportModal';
+import { SavedProjectsModal } from './components/modals/SavedProjectsModal';
+import { AuthModal } from './components/modals/AuthModal';
+import { ToastContainer } from './components/ui/ToastContainer';
 import { useBuilderStore } from './store/useBuilderStore';
+import { supabase } from './lib/supabase';
 import { Plus, SlidersHorizontal, Eye } from 'lucide-react';
 
 export function App() {
@@ -17,9 +21,52 @@ export function App() {
     studioTheme,
     setLeftSidebarOpen,
     setRightSidebarOpen,
+    isProjectsModalOpen,
+    setProjectsModalOpen,
+    isAuthModalOpen,
+    setAuthModalOpen,
   } = useBuilderStore();
 
   const isLight = studioTheme === 'light';
+
+  // Restore user's live draft from Supabase on launch & refresh
+  useEffect(() => {
+    const restoreCloudDraft = async () => {
+      try {
+        const { data } = await supabase.auth.getUser();
+        const userId = data?.user?.id;
+        const draftId = userId ? `live_draft_${userId}` : 'live_draft_anonymous';
+
+        const { data: proj } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('id', draftId)
+          .maybeSingle();
+
+        if (proj && proj.data) {
+          useBuilderStore.setState({
+            rootNode: proj.data,
+            selectedNodeId: proj.data.id,
+            selectedNodeIds: [proj.data.id],
+          });
+        }
+      } catch (err) {
+        console.warn('Supabase initial cloud restore offline/error', err);
+      }
+    };
+
+    restoreCloudDraft();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        restoreCloudDraft();
+      }
+    });
+
+    return () => {
+      authListener?.subscription?.unsubscribe();
+    };
+  }, []);
 
   // Global keyboard shortcuts listener for Undo (Ctrl+Z), Redo (Ctrl+Y / Ctrl+Shift+Z), & Delete
   useEffect(() => {
@@ -51,6 +98,15 @@ export function App() {
         if (selectedNodeId && !selectedNodeId.startsWith('root_')) {
           e.preventDefault();
           deleteNode(selectedNodeId);
+        }
+      }
+      // Escape → clear multi-selection (keeps last selected node active)
+      else if (e.key === 'Escape') {
+        const { selectedNodeIds, selectedNodeId, setSelectedNodeId } = useBuilderStore.getState();
+        if (selectedNodeIds.length > 1) {
+          e.preventDefault();
+          // Collapse to just the anchor node
+          setSelectedNodeId(selectedNodeId);
         }
       }
     };
@@ -163,6 +219,15 @@ export function App() {
       )}
 
       <CodeExportModal />
+      <SavedProjectsModal
+        isOpen={isProjectsModalOpen}
+        onClose={() => setProjectsModalOpen(false)}
+      />
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+      />
+      <ToastContainer />
     </div>
   );
 }

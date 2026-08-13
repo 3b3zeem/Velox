@@ -4,7 +4,7 @@ import { PRESET_TEMPLATES } from '../../data/componentLibrary';
 import { useBuilderStore } from '../../store/useBuilderStore';
 
 export const TemplatesPalette: React.FC = () => {
-  const { loadTemplate, rootNode, studioTheme } = useBuilderStore();
+  const { loadTemplate, rootNode, studioTheme, addToast } = useBuilderStore();
   const isLight = studioTheme === 'light';
 
   return (
@@ -26,9 +26,8 @@ export const TemplatesPalette: React.FC = () => {
             <div
               key={tmpl.id}
               onClick={() => {
-                if (confirm(`Load template "${tmpl.title}"? Current canvas edits will be overwritten (Undo is available).`)) {
-                  loadTemplate(tmpl.id);
-                }
+                loadTemplate(tmpl.id);
+                addToast(`Loaded template "${tmpl.title}"`, 'success');
               }}
               className={`group p-3.5 rounded-2xl border transition-all cursor-pointer ${
                 isActive

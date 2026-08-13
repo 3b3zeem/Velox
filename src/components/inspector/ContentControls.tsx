@@ -55,10 +55,10 @@ export const ContentControls: React.FC<ContentControlsProps> = ({ node, onUpdate
               onChange={(e) => onUpdateProps({ mobileCtaMode: e.target.value as any })}
               className={inputClass}
             >
-              <option value="in_menu">🍔 Fold inside Menu (ضم الزرار داخل المنيو)</option>
-              <option value="top_compact">📌 Stay on Top Bar (إبقاء الزرار بحجم أصغر)</option>
-              <option value="top_icon">⭐ Icon Only on Top Bar (استبدال بـ أيقونة)</option>
-              <option value="hide">🙈 Hide on Mobile (إخفاء الزرار تماماً)</option>
+              <option value="in_menu">Fold inside Menu (ضم الزرار داخل المنيو)</option>
+              <option value="top_compact">Stay on Top Bar (إبقاء الزرار بحجم أصغر)</option>
+              <option value="top_icon">Icon Only on Top Bar (استبدال بـ أيقونة)</option>
+              <option value="hide">Hide on Mobile (إخفاء الزرار تماماً)</option>
             </select>
           </div>
 
@@ -70,10 +70,10 @@ export const ContentControls: React.FC<ContentControlsProps> = ({ node, onUpdate
                 onChange={(e) => onUpdateProps({ mobileCtaAlign: e.target.value as any })}
                 className={inputClass}
               >
-                <option value="full">↔️ Full Width (عرض القائمة بالكامل)</option>
-                <option value="center">↔️ Center Aligned (في المنتصف)</option>
-                <option value="left">⬅️ Left Aligned (محاذاة لليسار)</option>
-                <option value="right">➡️ Right Aligned (محاذاة لليمين)</option>
+                <option value="full">Full Width (عرض القائمة بالكامل)</option>
+                <option value="center">Center Aligned (في المنتصف)</option>
+                <option value="left">Left Aligned (محاذاة لليسار)</option>
+                <option value="right">Right Aligned (محاذاة لليمين)</option>
               </select>
             </div>
           )}
@@ -116,7 +116,7 @@ export const ContentControls: React.FC<ContentControlsProps> = ({ node, onUpdate
           {/* MENU BUTTON CONTROLS */}
           <div className="pt-2 border-t border-slate-700/40 space-y-2.5">
             <span className="font-bold text-[11px] uppercase tracking-wider text-indigo-400 block">
-              🎛️ Hamburger Button Settings (زرار القائمة نفسه)
+              Hamburger Button Settings (زرار القائمة نفسه)
             </span>
 
             <div className="space-y-1.5">
@@ -126,10 +126,10 @@ export const ContentControls: React.FC<ContentControlsProps> = ({ node, onUpdate
                 onChange={(e) => onUpdateProps({ mobileMenuBtnStyle: e.target.value as any })}
                 className={inputClass}
               >
-                <option value="rounded">◽ Soft Rounded (مربع بدوائر ناعمة)</option>
-                <option value="circle">⚪ Pill / Circle (دائري بالكامل)</option>
-                <option value="square">🔲 Sharp Square (مربع حاد الزوايا)</option>
-                <option value="ghost">👻 Minimal Ghost (بدون خلفية أو حدود)</option>
+                <option value="rounded">Soft Rounded (مربع بدوائر ناعمة)</option>
+                <option value="circle">Pill / Circle (دائري بالكامل)</option>
+                <option value="square">Sharp Square (مربع حاد الزوايا)</option>
+                <option value="ghost">Minimal Ghost (بدون خلفية أو حدود)</option>
               </select>
             </div>
 
@@ -140,9 +140,9 @@ export const ContentControls: React.FC<ContentControlsProps> = ({ node, onUpdate
                 onChange={(e) => onUpdateProps({ mobileMenuBtnIcon: e.target.value as any })}
                 className={inputClass}
               >
-                <option value="hamburger">☰ Classic Lines (ثلاثة خطوط)</option>
-                <option value="dots">⋮ Three Dots (ثلاث نقاط)</option>
-                <option value="grid">🔲 Grid Icon (أيقونة شبكية)</option>
+                <option value="hamburger">Classic Lines (ثلاثة خطوط)</option>
+                <option value="dots">Three Dots (ثلاث نقاط)</option>
+                <option value="grid">Grid Icon (أيقونة شبكية)</option>
               </select>
             </div>
 
@@ -185,12 +185,168 @@ export const ContentControls: React.FC<ContentControlsProps> = ({ node, onUpdate
                 onChange={(e) => onUpdateProps({ mobileHoverEffect: e.target.value as any })}
                 className={inputClass}
               >
-                <option value="subtle">✨ Subtle Glass (تأثير شفاف ناعم)</option>
-                <option value="indigo">💜 Indigo Glow (إضاءة بنفسجية ناعمة)</option>
-                <option value="emerald">💚 Emerald Glow (إضاءة زمردية)</option>
-                <option value="pill">💊 Solid White Pill (زرار مصمت عند الهوفر)</option>
-                <option value="lift">🚀 Elevation Lift (ارتفاع خفيف مع ظل)</option>
+                <option value="subtle">Subtle Glass (تأثير شفاف ناعم)</option>
+                <option value="indigo">Indigo Glow (إضاءة بنفسجية ناعمة)</option>
+                <option value="emerald">Emerald Glow (إضاءة زمردية)</option>
+                <option value="pill">Solid White Pill (زرار مصمت عند الهوفر)</option>
+                <option value="lift">Elevation Lift (ارتفاع خفيف مع ظل)</option>
               </select>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FAQ Accordion Toggle Controls */}
+      {(node.isContainer || node.type === 'card') &&
+        (nameLower.includes('faq item') ||
+          nameLower.includes('faq card') ||
+          nameLower.includes('accordion item') ||
+          nameLower.includes('q1 card') ||
+          nameLower.includes('q2 card')) && (
+        <div className={`p-3 rounded-xl border space-y-2.5 ${isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-950 border-slate-800'}`}>
+          <span className="font-bold text-[11px] uppercase tracking-wider text-indigo-500 flex items-center gap-1.5">
+            ✦ FAQ Toggle Button Controls (تحكم في زرار الفتح/الإغلاق)
+          </span>
+
+          {/* Collapsed Icon Picker */}
+          <div className="space-y-1.5">
+            <label className={labelClass}>Icon Before Click (أيقونة قبل الضغط — مغلق)</label>
+            <select
+              value={node.faqCollapsedIcon || 'Plus'}
+              onChange={(e) => onUpdateProps({ faqCollapsedIcon: e.target.value })}
+              className={inputClass}
+            >
+              <option value="Plus">➕ Plus (علامة الزائد)</option>
+              <option value="ChevronDown">⌄ Chevron Down (سهم تحت)</option>
+              <option value="Arrow Down">↓ Arrow Down (سهم لأسفل)</option>
+              <option value="Circle">○ Circle (دائرة فارغة)</option>
+              <option value="Circle Dot">◉ Circle Dot (دائرة بنقطة)</option>
+            </select>
+          </div>
+
+          {/* Expanded Icon Picker */}
+          <div className="space-y-1.5">
+            <label className={labelClass}>Icon After Click (أيقونة بعد الضغط — مفتوح)</label>
+            <select
+              value={node.faqExpandedIcon || 'Minus'}
+              onChange={(e) => onUpdateProps({ faqExpandedIcon: e.target.value })}
+              className={inputClass}
+            >
+              <option value="Minus">➖ Minus (علامة الناقص)</option>
+              <option value="ChevronUp">⌃ Chevron Up (سهم فوق)</option>
+              <option value="Arrow Up">↑ Arrow Up (سهم لأعلى)</option>
+              <option value="X">✕ X Close (علامة الإغلاق)</option>
+              <option value="Circle">○ Circle (دائرة فارغة)</option>
+            </select>
+          </div>
+
+          {/* Toggle Button Size */}
+          <div className="space-y-1.5">
+            <label className={labelClass}>Toggle Button Size (حجم الزرار)</label>
+            <div className="grid grid-cols-3 gap-1.5">
+              {(['sm', 'md', 'lg'] as const).map((sz) => (
+                <button
+                  key={sz}
+                  type="button"
+                  onClick={() => onUpdateProps({ faqToggleSize: sz })}
+                  className={`py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                    (node.faqToggleSize || 'md') === sz
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : isLight
+                        ? 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-300'
+                        : 'bg-slate-900 text-slate-400 hover:bg-slate-800 border border-slate-800'
+                  }`}
+                >
+                  {sz === 'sm' ? 'Small' : sz === 'md' ? 'Medium' : 'Large'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Toggle Button Shape */}
+          <div className="space-y-1.5">
+            <label className={labelClass}>Toggle Button Shape (شكل الزرار)</label>
+            <select
+              value={node.faqToggleRadius || 'rounded-xl'}
+              onChange={(e) => onUpdateProps({ faqToggleRadius: e.target.value })}
+              className={inputClass}
+            >
+              <option value="rounded-xl">Soft Rounded (مربع ناعم)</option>
+              <option value="rounded-full">Pill / Circle (دائري)</option>
+              <option value="rounded-lg">Normal Rounded (عادي)</option>
+              <option value="rounded-none">Sharp Square (مربع حاد)</option>
+            </select>
+          </div>
+
+          {/* Collapsed BG Color */}
+          <div className="space-y-1.5">
+            <label className={labelClass}>Button Color — Closed (لون الزرار وهو مغلق)</label>
+            <div className="grid grid-cols-5 gap-1.5">
+              {[
+                { label: 'Slate', value: 'bg-slate-800' },
+                { label: 'Indigo', value: 'bg-indigo-600' },
+                { label: 'Cyan', value: 'bg-cyan-600' },
+                { label: 'Emerald', value: 'bg-emerald-600' },
+                { label: 'Rose', value: 'bg-rose-600' },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => onUpdateProps({ faqToggleBg: opt.value })}
+                  className={`py-1.5 rounded-lg text-[9px] font-bold transition-all cursor-pointer border ${
+                    (node.faqToggleBg || 'bg-slate-800') === opt.value
+                      ? 'ring-2 ring-indigo-500 ring-offset-1 ring-offset-slate-950 scale-105'
+                      : 'border-slate-700/50 opacity-70 hover:opacity-100'
+                  }`}
+                  style={{
+                    backgroundColor:
+                      opt.value === 'bg-slate-800' ? '#1e293b'
+                      : opt.value === 'bg-indigo-600' ? '#4f46e5'
+                      : opt.value === 'bg-cyan-600' ? '#0891b2'
+                      : opt.value === 'bg-emerald-600' ? '#059669'
+                      : '#e11d48',
+                    color: '#fff',
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Active BG Color */}
+          <div className="space-y-1.5">
+            <label className={labelClass}>Button Color — Open (لون الزرار وهو مفتوح)</label>
+            <div className="grid grid-cols-5 gap-1.5">
+              {[
+                { label: 'Indigo', value: 'bg-indigo-600' },
+                { label: 'Purple', value: 'bg-purple-600' },
+                { label: 'Cyan', value: 'bg-cyan-600' },
+                { label: 'Emerald', value: 'bg-emerald-600' },
+                { label: 'Rose', value: 'bg-rose-600' },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => onUpdateProps({ faqToggleActiveBg: opt.value })}
+                  className={`py-1.5 rounded-lg text-[9px] font-bold transition-all cursor-pointer border ${
+                    (node.faqToggleActiveBg || 'bg-indigo-600') === opt.value
+                      ? 'ring-2 ring-indigo-500 ring-offset-1 ring-offset-slate-950 scale-105'
+                      : 'border-slate-700/50 opacity-70 hover:opacity-100'
+                  }`}
+                  style={{
+                    backgroundColor:
+                      opt.value === 'bg-indigo-600' ? '#4f46e5'
+                      : opt.value === 'bg-purple-600' ? '#9333ea'
+                      : opt.value === 'bg-cyan-600' ? '#0891b2'
+                      : opt.value === 'bg-emerald-600' ? '#059669'
+                      : '#e11d48',
+                    color: '#fff',
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>

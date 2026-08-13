@@ -1,3 +1,18 @@
+/**
+ * ComponentPalette.tsx
+ * ─────────────────────────────────────────────────────────────
+ * The draggable component library panel (Left Sidebar → "Components" tab).
+ *
+ * Each item in the palette corresponds to a CanvasNode template defined in
+ * componentLibrary.ts. Users can either:
+ *   • Drag the item onto the canvas to drop it at a specific position
+ *   • Click the "+" quick-add button to insert it at the selected node
+ *
+ * The category filter pills (All / Layout / Typography / etc.) filter the
+ * visible list but never affect what gets added — they're purely presentational.
+ * ─────────────────────────────────────────────────────────────
+ */
+
 import React, { useState } from 'react';
 import {
   Box,
