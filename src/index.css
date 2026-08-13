@@ -1,0 +1,261 @@
+@import "tailwindcss";
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Custom scrollbar styling for studio panels */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
+
+/* Studio Canvas drop animation */
+@keyframes dropPulse {
+  0%, 100% {
+    outline-color: #6366f1;
+    background-color: rgba(99, 102, 241, 0.08);
+  }
+  50% {
+    outline-color: #8b5cf6;
+    background-color: rgba(139, 92, 246, 0.12);
+  }
+}
+
+.droppable-active {
+  animation: dropPulse 1.2s ease-in-out infinite;
+}
+
+/* Studio Canvas Dot Grid Pattern */
+.bg-dot-pattern-light {
+  background-color: #e2e8f0; /* slate-200 */
+  background-image: radial-gradient(#94a3b8 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+}
+
+.bg-dot-pattern-dark {
+  background-color: #020617; /* slate-950 */
+  background-image: radial-gradient(#334155 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+}
+
+/* ==========================================================================
+   ARABIC & ENGLISH FONT FAMILY UTILITIES
+   ========================================================================== */
+
+/* Arabic Fonts */
+.font-cairo { font-family: 'Cairo', sans-serif !important; }
+.font-tajawal { font-family: 'Tajawal', sans-serif !important; }
+.font-almarai { font-family: 'Almarai', sans-serif !important; }
+.font-amiri { font-family: 'Amiri', serif !important; }
+.font-changa { font-family: 'Changa', sans-serif !important; }
+.font-mada { font-family: 'Mada', sans-serif !important; }
+.font-readex { font-family: 'Readex Pro', sans-serif !important; }
+.font-alexandria { font-family: 'Alexandria', sans-serif !important; }
+.font-kufam { font-family: 'Kufam', cursive !important; }
+.font-ruqaa { font-family: 'Aref Ruqaa', serif !important; }
+.font-vazir { font-family: 'Vazirmatn', sans-serif !important; }
+.font-messiri { font-family: 'El Messiri', sans-serif !important; }
+
+/* English Fonts */
+.font-inter { font-family: 'Inter', sans-serif !important; }
+.font-outfit { font-family: 'Outfit', sans-serif !important; }
+.font-jakarta { font-family: 'Plus Jakarta Sans', sans-serif !important; }
+.font-poppins { font-family: 'Poppins', sans-serif !important; }
+.font-roboto { font-family: 'Roboto', sans-serif !important; }
+.font-montserrat { font-family: 'Montserrat', sans-serif !important; }
+.font-playfair { font-family: 'Playfair Display', serif !important; }
+.font-syne { font-family: 'Syne', sans-serif !important; }
+.font-firacode { font-family: 'Fira Code', monospace !important; }
+.font-cinzel { font-family: 'Cinzel', serif !important; }
+.font-bebas { font-family: 'Bebas Neue', cursive !important; }
+.font-space { font-family: 'Space Grotesk', sans-serif !important; }
+
+/* ==========================================================================
+   BEFORE & AFTER PSEUDO-ELEMENT HOVER ANIMATIONS & COLORS
+   ========================================================================== */
+
+/* Pseudo-element Color Utility Classes */
+.pseudo-indigo { --pseudo-color: #6366f1 !important; }
+.pseudo-emerald { --pseudo-color: #10b981 !important; }
+.pseudo-rose { --pseudo-color: #f43f5e !important; }
+.pseudo-amber { --pseudo-color: #f59e0b !important; }
+.pseudo-cyan { --pseudo-color: #06b6d4 !important; }
+.pseudo-purple { --pseudo-color: #a855f7 !important; }
+.pseudo-pink { --pseudo-color: #ec4899 !important; }
+.pseudo-gold { --pseudo-color: #eab308 !important; }
+.pseudo-white { --pseudo-color: #ffffff !important; }
+.pseudo-slate { --pseudo-color: #64748b !important; }
+
+/* 1. Line Expanding From Center (خط متمدد من المنتصف) */
+.effect-underline-expand {
+  position: relative !important;
+}
+.effect-underline-expand::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: -2px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 0% !important;
+  height: 2.5px !important;
+  background: var(--pseudo-color, #6366f1) !important;
+  border-radius: 999px !important;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  pointer-events: none !important;
+}
+.effect-underline-expand:hover::after {
+  width: 100% !important;
+}
+
+/* 2. Line Sliding From Left to Right (خط سفلـي يتسحب من اليسار) */
+.effect-underline-slide-left {
+  position: relative !important;
+}
+.effect-underline-slide-left::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: -2px !important;
+  left: 0 !important;
+  width: 0% !important;
+  height: 2.5px !important;
+  background: var(--pseudo-color, #6366f1) !important;
+  border-radius: 999px !important;
+  transition: width 0.3s ease-in-out !important;
+  pointer-events: none !important;
+}
+.effect-underline-slide-left:hover::after {
+  width: 100% !important;
+}
+
+/* 3. Vertical Left Accent Indicator (مؤشر جانبي عمودي أنيق) */
+.effect-left-border-indicator {
+  position: relative !important;
+}
+.effect-left-border-indicator::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -6px !important;
+  width: 3.5px !important;
+  height: 0% !important;
+  background: var(--pseudo-color, #6366f1) !important;
+  border-radius: 999px !important;
+  transition: height 0.3s ease-in-out !important;
+  pointer-events: none !important;
+}
+.effect-left-border-indicator:hover::before {
+  height: 100% !important;
+}
+
+/* 4. Dual Top & Bottom Parallel Lines (خطين متوازيين أعلى وأسفل) */
+.effect-top-bottom-lines {
+  position: relative !important;
+}
+.effect-top-bottom-lines::before,
+.effect-top-bottom-lines::after {
+  content: '' !important;
+  position: absolute !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 0% !important;
+  height: 2px !important;
+  background: var(--pseudo-color, #818cf8) !important;
+  transition: width 0.3s ease-in-out !important;
+  pointer-events: none !important;
+}
+.effect-top-bottom-lines::before { top: -3px !important; }
+.effect-top-bottom-lines::after { bottom: -3px !important; }
+.effect-top-bottom-lines:hover::before,
+.effect-top-bottom-lines:hover::after {
+  width: 100% !important;
+}
+
+/* 5. Sleek Light Beam Sweep (شعاع مسح ضوئي ناعم) */
+.effect-shine-light {
+  position: relative !important;
+  overflow: hidden !important;
+}
+.effect-shine-light::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -150% !important;
+  width: 80% !important;
+  height: 100% !important;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent) !important;
+  transform: skewX(-20deg) !important;
+  transition: left 0.6s ease-in-out !important;
+  pointer-events: none !important;
+}
+.effect-shine-light:hover::before {
+  left: 180% !important;
+}
+
+/* 6. Soft Pill Background Aura (توهج غيمة خلفية هادئة) */
+.effect-soft-pill-glow {
+  position: relative !important;
+  z-index: 1 !important;
+}
+.effect-soft-pill-glow::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: -3px -8px !important;
+  background: var(--pseudo-color, #6366f1) !important;
+  border-radius: 8px !important;
+  opacity: 0 !important;
+  transform: scale(0.95) !important;
+  transition: all 0.25s ease-in-out !important;
+  z-index: -1 !important;
+  pointer-events: none !important;
+}
+.effect-soft-pill-glow:hover::before {
+  opacity: 0.18 !important;
+  transform: scale(1) !important;
+}
+
+/* 7. Neon Glowing Underline Bar (خط نيون متوهج برّاق) */
+.effect-glowing-underline {
+  position: relative !important;
+}
+.effect-glowing-underline::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: -3px !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 2px !important;
+  background: var(--pseudo-color, #38bdf8) !important;
+  box-shadow: 0 0 8px var(--pseudo-color, #38bdf8), 0 0 16px var(--pseudo-color, #38bdf8) !important;
+  opacity: 0 !important;
+  transform: scaleX(0) !important;
+  transform-origin: center !important;
+  transition: all 0.3s ease-in-out !important;
+  pointer-events: none !important;
+}
+.effect-glowing-underline:hover::after {
+  opacity: 1 !important;
+  transform: scaleX(1) !important;
+}
