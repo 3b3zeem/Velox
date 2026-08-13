@@ -292,8 +292,7 @@ export const CanvasNodeRenderer: React.FC<CanvasNodeRendererProps> = memo(
     if (node.hidden) return null;
 
     // ── Class name resolution ──────────────────────────────────────────────
-    const canvasResponsiveMode = viewMode === 'desktop' || viewMode === 'preview' ? 'canvas-desktop' : viewMode === 'tablet' ? 'canvas-tablet' : 'canvas-mobile';
-    let classNameStr = getNodeClassNames(node.styles, canvasResponsiveMode);
+    let classNameStr = getNodeClassNames(node.styles);
 
     // Simulated hover: strip hover: prefix and apply classes directly
     if (simulatedHoverNodeId === node.id) {
@@ -885,4 +884,5 @@ export const CanvasNodeRenderer: React.FC<CanvasNodeRendererProps> = memo(
 );
 
 CanvasNodeRenderer.displayName = "CanvasNodeRenderer";
+
 
