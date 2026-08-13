@@ -9,7 +9,6 @@ import {
   Code,
   Download,
   Trash2,
-  Sparkles,
   LayoutTemplate,
   Sun,
   Moon,

@@ -12,7 +12,6 @@ import {
   Send,
   MoreVertical,
   Grid,
-  SlidersHorizontal,
 } from 'lucide-react';
 import type { CanvasNode } from '../../types/builder';
 import { getNodeClassNames } from '../../compiler/astCompiler';

@@ -1,6 +1,6 @@
 import React from 'react';
 import type { CanvasNode } from '../../types/builder';
-import { AlignCenter, AlignLeft, AlignRight, Upload, X, Smartphone, Menu, Palette } from 'lucide-react';
+import { AlignCenter, AlignLeft, AlignRight, Upload, X, Smartphone, Palette } from 'lucide-react';
 import { useBuilderStore } from '../../store/useBuilderStore';
 
 interface ContentControlsProps {
