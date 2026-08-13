@@ -1,8 +1,9 @@
 import type { CanvasNode, NodeStyles } from '../types/builder';
 
 // Helper to make standard Tailwind classes auto-responsive for mobile screens out of the box
-export const makeAutoResponsiveClass = (rawClass: string): string => {
+export const makeAutoResponsiveClass = (rawClass: string, mode: 'canvas-mobile' | 'canvas-tablet' | 'canvas-desktop' | 'export' = 'export'): string => {
   if (!rawClass) return '';
+  if (mode === 'canvas-desktop') return rawClass;
   let updated = rawClass;
 
   // 1. Grid columns auto-responsive (e.g. "grid-cols-3" -> "grid-cols-1 md:grid-cols-3")
@@ -41,18 +42,18 @@ export const makeAutoResponsiveClass = (rawClass: string): string => {
 };
 
 // Utility to combine node styles into clean Tailwind CSS class string
-export const getNodeClassNames = (styles: NodeStyles): string => {
+export const getNodeClassNames = (styles: NodeStyles, mode: 'canvas-mobile' | 'canvas-tablet' | 'canvas-desktop' | 'export' = 'export'): string => {
   const classes: string[] = [];
 
-  if (styles.display) classes.push(makeAutoResponsiveClass(styles.display));
-  if (styles.flexDirection) classes.push(makeAutoResponsiveClass(styles.flexDirection));
+  if (styles.display) classes.push(makeAutoResponsiveClass(styles.display, mode));
+  if (styles.flexDirection) classes.push(makeAutoResponsiveClass(styles.flexDirection, mode));
   if (styles.alignItems) classes.push(styles.alignItems);
   if (styles.justifyContent) classes.push(styles.justifyContent);
   if (styles.gap) classes.push(styles.gap);
-  if (styles.gridCols) classes.push(makeAutoResponsiveClass(styles.gridCols));
+  if (styles.gridCols) classes.push(makeAutoResponsiveClass(styles.gridCols, mode));
   if (styles.flexWrap) classes.push(styles.flexWrap);
 
-  if (styles.padding) classes.push(makeAutoResponsiveClass(styles.padding));
+  if (styles.padding) classes.push(makeAutoResponsiveClass(styles.padding, mode));
   if (styles.margin) classes.push(styles.margin);
 
   // If customClasses explicitly contains height/width (e.g. h-screen, w-1/2), prioritize customClasses over default presets
@@ -70,7 +71,7 @@ export const getNodeClassNames = (styles: NodeStyles): string => {
   if (styles.objectFit) classes.push(styles.objectFit);
   if (styles.aspectRatio) classes.push(styles.aspectRatio);
 
-  if (styles.fontSize) classes.push(makeAutoResponsiveClass(styles.fontSize));
+  if (styles.fontSize) classes.push(makeAutoResponsiveClass(styles.fontSize, mode));
   if (styles.fontWeight) classes.push(styles.fontWeight);
   if (styles.textColor) classes.push(styles.textColor);
   if (styles.textAlign) classes.push(styles.textAlign);
@@ -345,3 +346,4 @@ ${bodyHTML}
 </body>
 </html>`;
 };
+
