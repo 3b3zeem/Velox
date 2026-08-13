@@ -7,10 +7,18 @@
 html, body, #root {
   width: 100%;
   height: 100%;
+  height: 100dvh;
   margin: 0;
   padding: 0;
   overflow: hidden;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Reserve space for iOS home indicator on mobile bottom dock */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .mobile-bottom-dock {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
 
 /* Custom scrollbar styling for studio panels */

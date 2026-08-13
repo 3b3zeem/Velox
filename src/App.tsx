@@ -62,13 +62,13 @@ export function App() {
   const isPreview = viewMode === 'preview';
 
   return (
-    <div className={`w-screen h-screen flex flex-col overflow-hidden font-sans select-none transition-colors duration-200 ${
+    <div className={`w-screen h-dvh flex flex-col overflow-hidden font-sans select-none transition-colors duration-200 ${
       isLight ? 'bg-slate-100 text-slate-800' : 'bg-slate-950 text-slate-100'
     }`}>
       <Header />
 
-      {/* Main Studio Area */}
-      <div className="flex-1 flex overflow-hidden relative">
+      {/* Main Studio Area — pb-14 reserves space for fixed mobile bottom dock */}
+      <div className={`flex-1 flex overflow-hidden relative ${!isPreview ? 'pb-14 lg:pb-0' : ''}`}>
         {/* Mobile Backdrop Mask (< lg screens) */}
         {!isPreview && mobilePanel !== 'canvas' && (
           <div
@@ -113,11 +113,12 @@ export function App() {
         )}
       </div>
 
-      {/* Mobile Bottom Dock Switcher (< lg screens) */}
+      {/* Mobile Bottom Dock Switcher (< lg screens) — fixed so it stays visible on mobile browsers */}
       {!isPreview && (
-        <div className={`lg:hidden h-14 flex items-center justify-around px-2 text-xs font-medium z-40 shadow-xl border-t backdrop-blur-md ${
+        <div className={`mobile-bottom-dock lg:hidden fixed bottom-0 inset-x-0 z-40 shadow-xl border-t backdrop-blur-md ${
           isLight ? 'bg-white/95 border-slate-200 text-slate-600' : 'bg-slate-900/95 border-slate-800 text-slate-400'
         }`}>
+          <div className="h-14 flex items-center justify-around px-2 text-xs font-medium">
           <button
             onClick={() => {
               setLeftSidebarOpen(true);
@@ -157,6 +158,7 @@ export function App() {
             <SlidersHorizontal className="w-4 h-4" />
             <span>Inspector</span>
           </button>
+          </div>
         </div>
       )}
 
