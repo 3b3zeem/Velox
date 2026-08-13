@@ -23,7 +23,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { useBuilderStore } from '../../store/useBuilderStore';
-import { supabase } from '../../lib/supabase';
+import { APP_URL, supabase } from '../../lib/supabase';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -95,7 +95,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: APP_URL,
         },
       });
       if (error) setErrorMsg(error.message);
@@ -428,3 +428,4 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     </div>
   );
 };
+
