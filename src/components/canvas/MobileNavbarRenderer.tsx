@@ -1,6 +1,28 @@
 /**
- * Responsive navbar renderer.
- * Shows desktop links on wider widths and a collapsible menu on smaller widths.
+ * MobileNavbarRenderer.tsx
+ * ─────────────────────────────────────────────────────────────
+ * Renders a smart mobile hamburger navbar for any container node
+ * that is detected as a "navbar" by its name (see detection below).
+ *
+ * This component was extracted from CanvasNodeRenderer.tsx because
+ * the mobile navbar logic alone was ~180 lines — enough to deserve
+ * its own file so the main renderer stays focused on element types.
+ *
+ * WHAT IT DOES:
+ *   • Shows brand/logo on the left, hamburger button on the right
+ *   • CTA button can appear: in the dropdown menu, in the top bar
+ *     (compact text or icon-only), or be hidden — controlled by
+ *     node.mobileCtaMode
+ *   • Hamburger button shape, icon, and color are customisable via
+ *     node.mobileMenuBtnStyle / mobileMenuBtnIcon / mobileMenuBtnBg
+ *   • Dropdown open/close uses smooth CSS max-height animation
+ *   • Per-link hover effect controlled by node.mobileHoverEffect
+ *
+ * DETECTION: CanvasNodeRenderer decides to use this component when:
+ *   - node.type is 'container', 'card', or 'section'
+ *   - node.name contains 'navbar', 'navigation', 'header', or equals 'nav'
+ *   - AND the canvas is in mobile / split-mobile view
+ * ─────────────────────────────────────────────────────────────
  */
 
 import React, { useState } from "react";
@@ -9,6 +31,7 @@ import type { CanvasNode } from "../../types/builder";
 
 interface MobileNavbarRendererProps {
   node: CanvasNode;
+  /** Passed down so children can render recursively in mobile mode. */
   renderChild: (childNode: CanvasNode) => React.ReactNode;
 }
 
@@ -20,63 +43,68 @@ export const MobileNavbarRenderer: React.FC<MobileNavbarRendererProps> = ({
 
   const childrenNodes = node.children || [];
 
+  // ── Find CTA button (recursive search) ────────────────────────────────
   const findAllButtons = (nodes: CanvasNode[]): CanvasNode[] => {
-    let buttons: CanvasNode[] = [];
-    for (const currentNode of nodes) {
-      if (currentNode.type === "button") {
-        buttons.push(currentNode);
-      } else if (currentNode.children?.length) {
-        buttons = buttons.concat(findAllButtons(currentNode.children));
+    let btns: CanvasNode[] = [];
+    for (const n of nodes) {
+      if (n.type === "button") {
+        btns.push(n);
+      } else if (n.children?.length) {
+        btns = btns.concat(findAllButtons(n.children));
       }
     }
-    return buttons;
+    return btns;
   };
 
   const allButtons = findAllButtons(childrenNodes);
   const ctaButton =
-    allButtons.find((candidate) => {
-      const lowerName = candidate.name.toLowerCase();
+    allButtons.find((c) => {
+      const n = c.name.toLowerCase();
       return (
-        lowerName.includes("cta") ||
-        lowerName.includes("action") ||
-        lowerName.includes("talk") ||
-        lowerName.includes("contact") ||
-        lowerName.includes("start") ||
-        lowerName.includes("get")
+        n.includes("cta") ||
+        n.includes("action") ||
+        n.includes("talk") ||
+        n.includes("contact") ||
+        n.includes("start") ||
+        n.includes("get")
       );
     }) || allButtons[0];
 
+  // ── Find brand / logo element ──────────────────────────────────────────
   const logoChild =
     childrenNodes.find(
-      (child) =>
-        !child.isContainer &&
-        (child.type === "heading" ||
-          child.type === "text" ||
-          child.name.toLowerCase().includes("logo") ||
-          child.name.toLowerCase().includes("brand")),
+      (c) =>
+        !c.isContainer &&
+        (c.type === "heading" ||
+          c.type === "text" ||
+          c.name.toLowerCase().includes("logo") ||
+          c.name.toLowerCase().includes("brand")),
     ) ||
-    childrenNodes.find((child) => !child.isContainer) ||
+    childrenNodes.find((c) => !c.isContainer) ||
     childrenNodes[0];
 
+  // ── Find nav links container or direct links ───────────────────────────
   const navGroupChild = childrenNodes.find(
-    (child) =>
-      child.isContainer &&
-      child !== logoChild &&
-      (child.name.toLowerCase().includes("link") ||
-        child.name.toLowerCase().includes("nav")),
+    (c) =>
+      c.isContainer &&
+      c !== logoChild &&
+      (c.name.toLowerCase().includes("link") ||
+        c.name.toLowerCase().includes("nav")),
   );
-
   const directLinks = childrenNodes.filter(
-    (child) => child !== logoChild && child.type !== "button" && child !== navGroupChild,
+    (c) => c !== logoChild && c.type !== "button" && c !== navGroupChild,
   );
-
   const navItemsToRender = navGroupChild?.children?.length
     ? navGroupChild.children
     : directLinks;
 
+  // ── Background color handling (supports both hex and Tailwind classes) ─
   const activeBg = node.mobileMenuBg || node.styles.backgroundColor;
-  const isHexOrRgb = activeBg && (activeBg.startsWith("#") || activeBg.startsWith("rgb"));
-  const containerBgStyle = isHexOrRgb ? { backgroundColor: activeBg } : undefined;
+  const isHexOrRgb =
+    activeBg && (activeBg.startsWith("#") || activeBg.startsWith("rgb"));
+  const containerBgStyle = isHexOrRgb
+    ? { backgroundColor: activeBg }
+    : undefined;
   const containerBgClass =
     !isHexOrRgb && activeBg
       ? activeBg
@@ -84,6 +112,7 @@ export const MobileNavbarRenderer: React.FC<MobileNavbarRendererProps> = ({
         ? ""
         : "bg-slate-900 dark:bg-slate-950";
 
+  // ── CTA alignment ──────────────────────────────────────────────────────
   const mobileCtaMode = node.mobileCtaMode || "in_menu";
   const mobileCtaAlign = node.mobileCtaAlign || "full";
   const ctaAlignClass =
@@ -95,6 +124,7 @@ export const MobileNavbarRenderer: React.FC<MobileNavbarRendererProps> = ({
           ? "w-auto max-w-[240px] ml-auto"
           : "w-full";
 
+  // ── Hover effect for dropdown links ────────────────────────────────────
   const hoverEffect = node.mobileHoverEffect || "subtle";
   const hoverClass =
     hoverEffect === "indigo"
@@ -107,6 +137,7 @@ export const MobileNavbarRenderer: React.FC<MobileNavbarRendererProps> = ({
             ? "hover:-translate-y-0.5 hover:shadow-lg hover:bg-white/20 hover:text-white"
             : "hover:bg-white/10 hover:text-white";
 
+  // ── Hamburger button appearance ────────────────────────────────────────
   const btnStyle = node.mobileMenuBtnStyle || "rounded";
   const btnIcon = node.mobileMenuBtnIcon || "hamburger";
   const customBtnBg = node.mobileMenuBtnBg;
@@ -120,7 +151,9 @@ export const MobileNavbarRenderer: React.FC<MobileNavbarRendererProps> = ({
           ? "rounded-xl border-none shadow-none"
           : "rounded-xl";
 
-  const isBtnHex = customBtnBg && (customBtnBg.startsWith("#") || customBtnBg.startsWith("rgb"));
+  const isBtnHex =
+    customBtnBg &&
+    (customBtnBg.startsWith("#") || customBtnBg.startsWith("rgb"));
   const btnStyleAttr = isBtnHex ? { backgroundColor: customBtnBg } : undefined;
   const btnClassAttr =
     !isBtnHex && customBtnBg
@@ -134,8 +167,10 @@ export const MobileNavbarRenderer: React.FC<MobileNavbarRendererProps> = ({
       style={containerBgStyle}
       className={`w-full relative z-30 rounded-2xl border border-slate-700/50 ${containerBgClass} backdrop-blur-md shadow-lg transition-all overflow-hidden my-1`}
     >
-      <div className="w-full flex items-center justify-between gap-3 px-4 py-3 min-h-[56px] border-b border-white/10">
-        <div className="flex items-center text-left min-w-0 shrink-0">
+      {/* ── Top Bar: Logo + CTA + Hamburger ── */}
+      <div className="w-full flex items-center justify-between px-4 py-3 min-h-[56px] border-b border-white/10">
+        {/* Logo / Brand (forced left) */}
+        <div className="flex items-center text-left min-w-0 flex-1 pr-2 whitespace-nowrap overflow-hidden">
           {logoChild ? (
             <div className="text-left text-base font-bold truncate tracking-tight text-white whitespace-nowrap">
               {renderChild(logoChild)}
@@ -147,48 +182,30 @@ export const MobileNavbarRenderer: React.FC<MobileNavbarRendererProps> = ({
           )}
         </div>
 
-        <div className="hidden md:flex md:flex-1 md:items-center md:justify-center md:gap-6 min-w-0">
-          {navItemsToRender.map((childNode) => (
-            <div key={childNode.id} className="text-slate-100 font-medium text-xs whitespace-nowrap">
-              {renderChild(childNode)}
-            </div>
-          ))}
-        </div>
-
+        {/* Right: optional compact CTA + hamburger */}
         <div className="flex items-center gap-2 shrink-0">
-          {ctaButton && mobileCtaMode === "in_menu" && (
-            <div className="hidden md:block shrink-0">
-              {renderChild(ctaButton)}
-            </div>
-          )}
-
           {ctaButton && mobileCtaMode === "top_compact" && (
-            <div className="hidden md:block shrink-0 max-w-[160px] whitespace-nowrap overflow-hidden">
-              {renderChild(ctaButton)}
+            <div className="shrink-0 max-w-[120px] whitespace-nowrap overflow-hidden">
+              <button
+                type="button"
+                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl shadow-md shadow-indigo-500/25 transition-all truncate cursor-pointer active:scale-95"
+              >
+                {ctaButton.content || "Action"}
+              </button>
             </div>
           )}
 
           {ctaButton && mobileCtaMode === "top_icon" && (
-            <>
-              <div className="hidden md:block shrink-0">
-                {renderChild(ctaButton)}
-              </div>
-              <button
-                type="button"
-                className="md:hidden w-8 h-8 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-500/25 flex items-center justify-center transition-all cursor-pointer active:scale-95 shrink-0"
-                title={ctaButton.content || "Action"}
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </>
+            <button
+              type="button"
+              className="w-8 h-8 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-500/25 flex items-center justify-center transition-all cursor-pointer active:scale-95 shrink-0"
+              title={ctaButton.content || "Action"}
+            >
+              <Send className="w-4 h-4" />
+            </button>
           )}
 
-          {ctaButton && mobileCtaMode === "hide" && (
-            <div className="hidden md:block shrink-0">
-              {renderChild(ctaButton)}
-            </div>
-          )}
-
+          {/* Hamburger / Close button */}
           <button
             type="button"
             style={btnStyleAttr}
@@ -196,7 +213,7 @@ export const MobileNavbarRenderer: React.FC<MobileNavbarRendererProps> = ({
               e.stopPropagation();
               setIsMenuOpen(!isMenuOpen);
             }}
-            className={`md:hidden p-2.5 ${shapeClass} border transition-all duration-300 cursor-pointer shadow-xs active:scale-90 flex items-center justify-center ${btnClassAttr}`}
+            className={`p-2.5 ${shapeClass} border transition-all duration-300 cursor-pointer shadow-xs active:scale-90 flex items-center justify-center ${btnClassAttr}`}
             title={isMenuOpen ? "Close Menu" : "Open Menu"}
           >
             <div
@@ -216,9 +233,10 @@ export const MobileNavbarRenderer: React.FC<MobileNavbarRendererProps> = ({
         </div>
       </div>
 
+      {/* ── Dropdown Menu (smooth open / close) ── */}
       <div
         style={isHexOrRgb ? { backgroundColor: activeBg } : undefined}
-        className={`md:hidden w-full px-4 border-t border-white/10 backdrop-blur-md transition-all duration-300 ease-in-out origin-top overflow-hidden ${
+        className={`w-full px-4 border-t border-white/10 backdrop-blur-md transition-all duration-300 ease-in-out origin-top overflow-hidden ${
           isMenuOpen
             ? "max-h-[600px] opacity-100 pt-3 pb-4 translate-y-0 scale-y-100"
             : "max-h-0 opacity-0 pt-0 pb-0 -translate-y-2 scale-y-95 pointer-events-none"
@@ -237,6 +255,7 @@ export const MobileNavbarRenderer: React.FC<MobileNavbarRendererProps> = ({
           ))}
         </div>
 
+        {/* CTA in dropdown (when mode is 'in_menu') */}
         {ctaButton && (mobileCtaMode === "in_menu" || !mobileCtaMode) && (
           <div className="pt-3 border-t border-white/10 w-full">
             <div className={`${ctaAlignClass} transition-all`}>
@@ -248,3 +267,4 @@ export const MobileNavbarRenderer: React.FC<MobileNavbarRendererProps> = ({
     </div>
   );
 };
+
