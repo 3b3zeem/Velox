@@ -48,34 +48,42 @@ export const CanvasNodeRenderer: React.FC<CanvasNodeRendererProps> = memo(({ nod
   const [toolbarOffset, setToolbarOffset] = useState<{ x: number; y: number }>({ x: 0, y: -38 });
   const dragStartRef = useRef<{ startX: number; startY: number; initialX: number; initialY: number } | null>(null);
 
-  const handleToolbarMouseDown = (e: React.MouseEvent) => {
+  const handleToolbarMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
-    e.preventDefault();
+    if ('preventDefault' in e) e.preventDefault();
+
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+
     dragStartRef.current = {
-      startX: e.clientX,
-      startY: e.clientY,
+      startX: clientX,
+      startY: clientY,
       initialX: toolbarOffset.x,
       initialY: toolbarOffset.y,
     };
 
-    const handleMouseMove = (moveEv: MouseEvent) => {
+    const handleMove = (moveEv: MouseEvent | TouchEvent) => {
       if (!dragStartRef.current) return;
-      const deltaX = moveEv.clientX - dragStartRef.current.startX;
-      const deltaY = moveEv.clientY - dragStartRef.current.startY;
+      const mx = 'touches' in moveEv ? (moveEv as TouchEvent).touches[0].clientX : (moveEv as MouseEvent).clientX;
+      const my = 'touches' in moveEv ? (moveEv as TouchEvent).touches[0].clientY : (moveEv as MouseEvent).clientY;
       setToolbarOffset({
-        x: dragStartRef.current.initialX + deltaX,
-        y: dragStartRef.current.initialY + deltaY,
+        x: dragStartRef.current.initialX + (mx - dragStartRef.current.startX),
+        y: dragStartRef.current.initialY + (my - dragStartRef.current.startY),
       });
     };
 
-    const handleMouseUp = () => {
+    const handleEnd = () => {
       dragStartRef.current = null;
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleEnd);
+      window.removeEventListener('touchmove', handleMove);
+      window.removeEventListener('touchend', handleEnd);
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleEnd);
+    window.addEventListener('touchmove', handleMove, { passive: false });
+    window.addEventListener('touchend', handleEnd);
   };
 
   const isSelected = selectedNodeId === node.id;
@@ -638,3 +646,4 @@ export const CanvasNodeRenderer: React.FC<CanvasNodeRendererProps> = memo(({ nod
 });
 
 CanvasNodeRenderer.displayName = 'CanvasNodeRenderer';
+

@@ -63,10 +63,9 @@ export const Header: React.FC = () => {
     >
       {/* LEFT SECTION: Brand & Quick Templates */}
       <div className="flex items-center space-x-2 shrink-0">
-        {/* Toggle Left Sidebar */}
         <button
           onClick={toggleLeftSidebar}
-          className={`flex p-1.5 rounded-xl border transition-all cursor-pointer ${
+          className={`hidden lg:flex p-1.5 rounded-xl border transition-all cursor-pointer ${
             isLeftSidebarOpen
               ? 'bg-indigo-600/10 border-indigo-500/30 text-indigo-600 dark:text-indigo-400'
               : isLight
@@ -162,7 +161,7 @@ export const Header: React.FC = () => {
       }`}>
         <button
           onClick={() => setViewMode('desktop')}
-          className={`flex items-center space-x-1 px-2 py-1 rounded-lg text-xs font-medium transition-all ${
+          className={`hidden sm:flex items-center space-x-1 px-2 py-1 rounded-lg text-xs font-medium transition-all ${
             viewMode === 'desktop'
               ? 'bg-indigo-600 text-white shadow-sm font-bold'
               : isLight
@@ -175,9 +174,10 @@ export const Header: React.FC = () => {
           <span className="hidden 2xl:inline text-[11px]">Desktop</span>
         </button>
 
+        {/* Tablet — hidden on mobile */}
         <button
           onClick={() => setViewMode('tablet')}
-          className={`flex items-center space-x-1 px-2 py-1 rounded-lg text-xs font-medium transition-all ${
+          className={`hidden sm:flex items-center space-x-1 px-2 py-1 rounded-lg text-xs font-medium transition-all ${
             viewMode === 'tablet'
               ? 'bg-indigo-600 text-white shadow-sm font-bold'
               : isLight
@@ -190,6 +190,7 @@ export const Header: React.FC = () => {
           <span className="hidden 2xl:inline text-[11px]">Tablet</span>
         </button>
 
+        {/* Mobile viewport — always visible */}
         <button
           onClick={() => setViewMode('mobile')}
           className={`flex items-center space-x-1 px-2 py-1 rounded-lg text-xs font-medium transition-all ${
@@ -205,9 +206,10 @@ export const Header: React.FC = () => {
           <span className="hidden 2xl:inline text-[11px]">Mobile</span>
         </button>
 
+        {/* Split — hidden on mobile */}
         <button
           onClick={() => setViewMode('split')}
-          className={`flex items-center space-x-1 px-2 py-1 rounded-lg text-xs font-medium transition-all ${
+          className={`hidden md:flex items-center space-x-1 px-2 py-1 rounded-lg text-xs font-medium transition-all ${
             viewMode === 'split'
               ? 'bg-indigo-600 text-white shadow-sm font-bold'
               : isLight
@@ -224,7 +226,7 @@ export const Header: React.FC = () => {
 
         <button
           onClick={() => setViewMode(viewMode === 'preview' ? 'desktop' : 'preview')}
-          className={`flex items-center space-x-1 px-2 py-1 rounded-lg text-xs font-medium transition-all ${
+          className={`hidden md:flex items-center space-x-1 px-2 py-1 rounded-lg text-xs font-medium transition-all ${
             viewMode === 'preview'
               ? 'bg-emerald-600 text-white shadow-sm font-bold'
               : isLight
@@ -240,10 +242,10 @@ export const Header: React.FC = () => {
 
       {/* RIGHT SECTION: Tools, Actions & Sidebar Toggles */}
       <div className="flex items-center space-x-1.5 shrink-0">
-        {/* Box Model Inspector Toggle */}
+        {/* Box Model Inspector Toggle — hidden on mobile */}
         <button
           onClick={toggleBoxInspector}
-          className={`flex items-center space-x-1 p-1.5 sm:px-2 sm:py-1 rounded-xl text-xs font-medium border transition-all cursor-pointer ${
+          className={`hidden sm:flex items-center space-x-1 p-1.5 sm:px-2 sm:py-1 rounded-xl text-xs font-medium border transition-all cursor-pointer ${
             boxInspectorEnabled
               ? 'bg-emerald-600/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-bold'
               : isLight
@@ -256,8 +258,8 @@ export const Header: React.FC = () => {
           <span className="hidden xl:inline text-[11px]">Box Model</span>
         </button>
 
-        {/* Global Canvas Theme Selector Dropdown */}
-        <div className="relative flex items-center">
+        {/* Global Canvas Theme Selector Dropdown — hidden on mobile */}
+        <div className="hidden sm:relative sm:flex items-center">
           <Palette className="w-3.5 h-3.5 text-indigo-500 absolute left-2 pointer-events-none" />
           <select
             onChange={(e) => {
@@ -311,7 +313,7 @@ export const Header: React.FC = () => {
           <span>Export</span>
         </button>
 
-        {/* Download ZIP */}
+        {/* Download ZIP — icon only on mobile */}
         <button
           onClick={handleDownloadZip}
           className={`flex items-center space-x-1 px-2 py-1 rounded-xl font-semibold text-xs border transition-all cursor-pointer ${
@@ -322,7 +324,7 @@ export const Header: React.FC = () => {
           title="Download complete Vite project ZIP"
         >
           <Download className="w-3.5 h-3.5 text-emerald-500" />
-          <span className="hidden sm:inline">ZIP</span>
+          <span className="hidden md:inline">ZIP</span>
         </button>
 
         {/* Studio Theme Toggle Button */}
@@ -342,10 +344,10 @@ export const Header: React.FC = () => {
           )}
         </button>
 
-        {/* Toggle Right Sidebar */}
+        {/* Toggle Right Sidebar — hidden on mobile (uses bottom dock instead) */}
         <button
           onClick={toggleRightSidebar}
-          className={`flex p-1.5 rounded-xl border transition-all cursor-pointer ${
+          className={`hidden lg:flex p-1.5 rounded-xl border transition-all cursor-pointer ${
             isRightSidebarOpen
               ? 'bg-indigo-600/10 border-indigo-500/30 text-indigo-600 dark:text-indigo-400'
               : isLight
