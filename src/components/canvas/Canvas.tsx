@@ -54,7 +54,7 @@ export const Canvas: React.FC = () => {
           ? `w-[1024px] max-w-[calc(100%-1rem)] min-h-[768px] shadow-2xl rounded-[28px] overflow-visible border-[8px] ${frameBorderColor} my-4 shrink-0 transition-all duration-300 relative`
           : `w-[768px] max-w-[calc(100%-1rem)] min-h-[1024px] shadow-2xl rounded-[28px] overflow-visible border-[8px] ${frameBorderColor} my-4 shrink-0 transition-all duration-300 relative`;
       case "preview":
-        return "w-full min-h-full border-none rounded-none my-0 overflow-hidden";
+        return `w-full max-w-[1240px] min-h-[800px] rounded-2xl overflow-visible border ${frameBorderColor} shadow-2xl my-4 shrink-0 transition-all duration-300 relative`;
       case "desktop":
       default:
         return `w-full max-w-[1240px] min-h-[800px] rounded-2xl overflow-visible border ${frameBorderColor} shadow-2xl my-4 shrink-0 transition-all duration-300 relative`;
@@ -214,3 +214,4 @@ export const Canvas: React.FC = () => {
     </main>
   );
 };
+

@@ -39,7 +39,7 @@ export const MobileNavbarRenderer: React.FC<MobileNavbarRendererProps> = ({
   node,
   renderChild,
 }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const childrenNodes = node.children || [];
 
@@ -267,3 +267,4 @@ export const MobileNavbarRenderer: React.FC<MobileNavbarRendererProps> = ({
     </div>
   );
 };
+
